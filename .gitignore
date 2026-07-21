@@ -27,9 +27,6 @@ Thumbs.db
 # Environment variables
 .env
 
-# Data (large files)
-data/
-
 # Database
 *.db
 
