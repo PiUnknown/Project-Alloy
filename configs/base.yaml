@@ -1,0 +1,15 @@
+# base config
+project:
+  seed: 42
+
+source:
+  site: stats.stackexchange.com
+  dump_path: data/raw/stats.stackexchange.com/Posts.xml
+
+eval_carveout:
+  target_size: 700
+  score_bucket_edges: [-100, 0, 3, 8, 100000]
+
+paths:
+  interim: data/interim
+  eval: data/eval
