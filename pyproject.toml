@@ -5,6 +5,11 @@ description = "Data-centric fine-tuning ablation pipeline"
 requires-python = ">=3.10"
 dependencies = [
     "pyyaml>=6.0",
+    "faiss-cpu",
+    "sentence-transformers",
+    "scikit-learn",
+    "numpy",
+    "joblib",
 ]
 
 [project.optional-dependencies]
