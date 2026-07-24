@@ -36,5 +36,3 @@ Thumbs.db
 # Reports
 reports/
 
-# Large data files
-*.npy
