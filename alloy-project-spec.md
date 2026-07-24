@@ -72,6 +72,8 @@ Nine sequential pipeline stages, each **idempotent** and **independently re-runn
 8. **Evaluate** — score every checkpoint against the identical frozen held-out set
 9. **Report** — produce the ablation comparison
 
+*Note: Stages 4 (train classifier) and 5 (dedup) both consume the same embeddings, computed once and cached to `data/interim/embeddings.npy` + `data/interim/embeddings_index.json`, rather than each stage recomputing them independently.*
+
 Every stage reads from and writes to versioned, named artifacts (not in-memory hand-offs), so any single stage can be re-run when one upstream decision changes, without re-running the whole pipeline.
 
 Each experiment run is driven by a single YAML config specifying: which curation filters are active, hyperparameters, base model, and random seed. A SQLite table records, for every run: config hash → dataset version produced → checkpoint produced → eval metrics. This is the pipeline's audit trail and what makes the ablation defensible rather than anecdotal.
@@ -105,7 +107,7 @@ Four variants, each isolating exactly one additional curation decision over the 
 
 ## 7. Quality Classifier Specification
 
-**Weak labeling heuristic:** top-quartile score AND accepted answer → positive label. Bottom-quartile score AND not accepted → negative label. Everything in the middle is treated as ambiguous and **excluded** from classifier training (not mislabeled either way) — this keeps the weak-label signal clean at the cost of using less of the corpus for classifier training, which is the correct tradeoff here.
+**Weak labeling heuristic (revised post-Phase 0):** since ingestion retains only questions with an accepted answer, the acceptance flag is constant across the pool and cannot serve as a labeling signal. The heuristic uses combined score (question_score + answer_score) alone: top-quartile combined score → positive label, bottom-quartile → negative label, middle 50% excluded as ambiguous.
 
 **Features:** sentence-transformer embeddings of the combined question+answer text.
 
@@ -200,6 +202,10 @@ Embedding-based near-duplicate detection: compute sentence-transformer embedding
 | Free-tier compute session limits interrupt training | Checkpoint/resume built in from Phase 0 |
 | Silent loss-masking bug invalidates SFT | Explicit verification step confirming loss is computed only on response tokens |
 | Replay buffer ratio chosen arbitrarily | Treat as a tunable; briefly justify the chosen value in the write-up rather than presenting it as self-evidently correct |
+
+### Open Items / Flagged Gaps
+
+**Known gap:** Phase 0's parser retains only the accepted answer per question; every non-accepted answer is discarded at ingestion. Phase 4's DPO stage requires a lower-scored "rejected" answer per question to construct preference pairs — this data does not currently exist anywhere in the pipeline. Phase 4 will need a targeted re-parse of the dump (pulling non-accepted answers for questions already in the working pool) before DPO pair construction can begin. Not resolved as of Phase 1.
 
 ---
 

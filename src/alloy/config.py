@@ -17,9 +17,22 @@ class EvalCarveoutConfig:
 
 
 @dataclass
+class LabelingConfig:
+    top_quantile: float
+    bottom_quantile: float
+
+
+@dataclass
+class DedupConfig:
+    similarity_threshold: float
+    top_k_neighbors: int
+
+
+@dataclass
 class PathsConfig:
     interim: str
     eval: str
+    models_classifier: str
 
 
 @dataclass
@@ -27,6 +40,8 @@ class AlloyConfig:
     seed: int
     source: SourceConfig
     eval_carveout: EvalCarveoutConfig
+    labeling: LabelingConfig
+    dedup: DedupConfig
     paths: PathsConfig
 
     @classmethod
@@ -36,5 +51,7 @@ class AlloyConfig:
             seed=raw["project"]["seed"],
             source=SourceConfig(**raw["source"]),
             eval_carveout=EvalCarveoutConfig(**raw["eval_carveout"]),
+            labeling=LabelingConfig(**raw["labeling"]),
+            dedup=DedupConfig(**raw["dedup"]),
             paths=PathsConfig(**raw["paths"]),
         )

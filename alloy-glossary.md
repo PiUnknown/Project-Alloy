@@ -36,15 +36,23 @@ Terms introduced while scoping and specifying Alloy, explained for someone comfo
 
 ## Data & Curation
 
+**Streaming XML parsing (iterparse)** — parsing a large XML file incrementally, element by element, discarding each element from memory right after it's read, instead of loading the whole document into memory as a tree. What makes parsing a multi-gigabyte dump feasible without running out of RAM.
+
 **Ablation study** — an experiment where you start from a baseline and change exactly one variable at a time, measuring the effect of each change in isolation. The core methodology of this entire project.
 
 **Weak labeling / weak supervision** — generating training labels from an imperfect, indirect signal (here: community upvotes and accepted-answer flags) instead of careful human annotation. Cheap and scalable, but noisier than hand-labeled data — the labels are a proxy for what you actually want to measure, not a direct measurement of it.
 
+**Stratified sampling** — splitting or sampling data so a specific attribute's distribution (here: score bucket) is preserved proportionally in the result, instead of leaving it to chance the way plain random sampling would.
+
 **Held-out set / eval set** — data deliberately set aside and never used in training, so it can be used afterward to measure performance on genuinely unseen examples.
+
+**Consistent hashing** — an assignment technique where which bucket/split an item falls into depends only on a hash of the item's own identity, never on the size or order of the rest of the collection. Used in Phase 0's eval carve-out specifically so the split stays stable even if the corpus grows or changes later.
 
 **Near-duplicate detection / deduplication (dedup)** — identifying entries in a dataset that are effectively the same (or trivially reworded versions of each other) and removing all but one, so the model doesn't over-learn from repeated content.
 
 **Embedding** — a numerical vector representation of a piece of text, produced by a model, such that texts with similar meaning end up with similar vectors. Used here both to detect near-duplicates (similar vectors = similar text) and as input features for the quality classifier.
+
+**L2 normalization (unit-length normalization)** — scaling a vector so its length equals 1. Once every embedding is normalized this way, cosine similarity between two vectors reduces to a plain dot product, which is much cheaper to compute at scale — this is why embed_texts passes normalize_embeddings=True.
 
 **MinHash / LSH (Locality-Sensitive Hashing)** — a fast, approximate technique for finding near-duplicate text at scale without comparing every pair directly. It hashes documents so that similar documents are likely to land in the same hash "bucket," making duplicate detection far cheaper than brute-force comparison.
 
@@ -53,6 +61,8 @@ Terms introduced while scoping and specifying Alloy, explained for someone comfo
 ## Evaluation
 
 **Perplexity** — a standard measure of how well a language model predicts a given piece of text — roughly, how "surprised" the model is by the actual next word at each step. Lower perplexity on the held-out set means the model fits that domain's language better.
+
+**Precision / Recall** — precision asks "of what I predicted positive, how much actually was?"; recall asks "of everything actually positive, how much did I catch?" For a quality filter specifically, precision usually matters more — letting bad examples slip in and pollute training is worse than losing a few good ones.
 
 **LLM-as-judge** — using a (typically stronger) language model to compare or score outputs from the model being evaluated, as a stand-in for human judgment. Used here to compare answer quality between ablation variants.
 
@@ -64,11 +74,17 @@ Terms introduced while scoping and specifying Alloy, explained for someone comfo
 
 **Unsloth** — an open-source library that makes LoRA/QLoRA fine-tuning, continued pretraining, and DPO significantly faster and more memory-efficient than standard Hugging Face tooling, largely through custom low-level kernels. The specific reason this project is feasible on free-tier GPUs at all.
 
+**FAISS / IndexFlatIP** — FAISS is a library for fast similarity search over dense vectors. IndexFlatIP specifically does exact (not approximate) inner-product search, but processes queries in optimized batches internally rather than ever materializing a full pairwise similarity matrix in memory — the difference between this running fine and running out of RAM at ~74k rows.
+
 **Weights & Biases (W&B)** — a hosted experiment-tracking tool. Every training run's config, metrics, and loss curves get logged automatically, so runs can be compared later without manually keeping a spreadsheet.
 
 **YAML** — a human-readable text format commonly used for configuration files. In this project, every experiment run is defined by one YAML file rather than hardcoded parameters, so runs are easy to compare and reproduce.
 
+**JSONL (JSON Lines)** — a file format where each line is one complete, independent JSON object, rather than one big JSON array. Lets you read or write the file one record at a time without loading the whole thing into memory — why pool.jsonl, quality_scores.jsonl, and dedup_decisions.jsonl are all this format instead of a single JSON array.
+
 **Idempotent (pipeline stage)** — a stage that produces the same result no matter how many times it's run with the same input. Critical for a pipeline where you'll frequently need to re-run just one stage after changing an upstream decision, without side effects piling up.
+
+**Frozen dataclass** — a Python dataclass instance that can't be modified after creation; reassigning a field raises an error. Used for QAPair specifically so nothing downstream can silently mutate a record as it passes through classifier scoring, dedup, and variant assembly.
 
 **Data lineage** — a record of exactly which inputs, code version, and configuration produced a given output. Here: tracking which config produced which curated dataset version produced which trained checkpoint, so every result is traceable back to the decisions that produced it.
 

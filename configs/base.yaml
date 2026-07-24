@@ -1,4 +1,3 @@
-# base config
 project:
   seed: 42
 
@@ -10,6 +9,15 @@ eval_carveout:
   target_size: 700
   score_bucket_edges: [-100, 0, 3, 8, 100000]
 
+labeling:
+  top_quantile: 0.75
+  bottom_quantile: 0.25
+
+dedup:
+  similarity_threshold: 0.97
+  top_k_neighbors: 10
+
 paths:
   interim: data/interim
   eval: data/eval
+  models_classifier: models/classifier
