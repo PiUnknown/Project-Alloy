@@ -21,3 +21,15 @@ paths:
   interim: data/interim
   eval: data/eval
   models_classifier: models/classifier
+
+evaluation:
+  base_model: Qwen/Qwen2.5-1.5B-Instruct
+  held_out_path: data/eval/held_out.jsonl
+  mmlu_path: data/eval/mmlu_subset.jsonl
+  output_path: reports/evaluation
+  seed: 42
+  perplexity_max_examples: 700
+  judge_max_examples: 100
+  mmlu_max_examples: 200
+  judge_endpoint: https://api.openai.com/v1
+  judge_model: gpt-4.1-mini

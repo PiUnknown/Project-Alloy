@@ -36,3 +36,13 @@ Thumbs.db
 # Reports
 reports/
 
+# Local agent & project documentation (private)
+agent.md
+PROJECT_WALKTHROUGH.md
+changelog.md
+flow.md
+decision.md
+
+# Tool cache
+.kombai/
+
