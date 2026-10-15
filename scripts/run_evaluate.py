@@ -106,7 +106,8 @@ def _verify_manifest(data_path: Path, manifest_path: Path, *, ids_field: str | N
         actual = hashlib.sha256(content).hexdigest()
         expected_count = manifest.get("count")
     expected = manifest.get("fingerprint", manifest.get("sha256"))
-    if expected_count is not None and expected_count != len(read_jsonl(data_path)):
+    row_count = len(read_jsonl(data_path))
+    if expected_count is not None and expected_count != row_count:
         raise SystemExit(f"Evaluation artifact count does not match manifest: {data_path}")
     if actual != expected:
         raise SystemExit(f"Evaluation artifact fingerprint does not match manifest: {data_path}")
@@ -220,7 +221,11 @@ def main() -> None:
         report["pairwise_status"] = "complete"
 
     output_dir.mkdir(parents=True, exist_ok=True)
-    output_path = output_dir / f"evaluation_{_safe_name(model_ids[0])}.json"
+    report_key = "__vs__".join(_safe_name(model_id) for model_id in model_ids)
+    if len(report_key) > 150:
+        digest = hashlib.sha256("\n".join(model_ids).encode("utf-8")).hexdigest()[:10]
+        report_key = f"{report_key[:130]}_{digest}"
+    output_path = output_dir / f"evaluation_{report_key}.json"
     output_path.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(f"Wrote evaluation report: {output_path}")
 

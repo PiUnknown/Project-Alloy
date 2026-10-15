@@ -46,3 +46,6 @@ decision.md
 # Tool cache
 .kombai/
 
+# Processed datasets and trained model checkpoints
+data/processed/
+models/checkpoints/

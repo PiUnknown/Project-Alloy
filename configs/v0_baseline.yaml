@@ -1,1 +1,50 @@
-# v0 baseline
+project:
+  variant: v0
+  seed: 42
+
+model:
+  name: Qwen/Qwen2.5-1.5B-Instruct
+  max_seq_length: 2048
+  max_prompt_length: 1024
+  load_in_4bit: true
+
+paths:
+  pool: data/interim/pool.jsonl
+  dump: data/raw/stats.stackexchange.com/Posts.xml
+  eval_manifest: data/eval/manifest.json
+  mmlu_manifest: data/eval/mmlu_subset_manifest.json
+  v0_data: data/processed/v0
+  checkpoints: models/checkpoints/v0
+  baseline_report: reports/evaluation/evaluation_Qwen_Qwen2.5-1.5B-Instruct.json
+
+lora:
+  rank: 16
+  alpha: 16
+  dropout: 0.0
+  target_modules:
+    - q_proj
+    - k_proj
+    - v_proj
+    - o_proj
+    - gate_proj
+    - up_proj
+    - down_proj
+
+training:
+  cpt: &standard_stage
+    max_steps: 500
+    learning_rate: 0.0002
+    per_device_train_batch_size: 1
+    gradient_accumulation_steps: 8
+    warmup_steps: 25
+    weight_decay: 0.01
+    lr_scheduler_type: cosine
+    logging_steps: 10
+    save_steps: 100
+    save_total_limit: 2
+  sft:
+    <<: *standard_stage
+  dpo:
+    <<: *standard_stage
+    learning_rate: 0.000005
+    beta: 0.1
